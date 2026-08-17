@@ -1,6 +1,7 @@
-import type { DocumentData, QueryDocumentSnapshot, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, type DocumentData, type QueryDocumentSnapshot, type Timestamp } from 'firebase-admin/firestore';
 import { getDb } from '../config/firebase.js';
 import { CARS_COLLECTION, type Car, type CarOrigin } from '../models/car.js';
+import type { CreateCarInput } from '../validation/create-car.js';
 import type { CarListQuery } from '../validation/car-list-query.js';
 
 function toDate(value: unknown): Date {
@@ -138,5 +139,22 @@ export function serialiseCar(car: Car) {
   return {
     ...car,
     createdAt: car.createdAt.toISOString(),
+  };
+}
+
+export async function createCar(input: CreateCarInput): Promise<Car> {
+  const db = getDb();
+  const ref = db.collection(CARS_COLLECTION).doc();
+  const createdAt = new Date();
+
+  await ref.set({
+    ...input,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+
+  return {
+    id: ref.id,
+    ...input,
+    createdAt,
   };
 }
