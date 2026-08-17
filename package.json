@@ -2,12 +2,13 @@
   "name": "johns-garage-api",
   "version": "1.0.0",
   "private": true,
-  "description": "Node.js API for John's car catalogue (FireHawk technical task)",
+  "description": "API for John's car catalogue",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "import": "tsx src/scripts/import-cars.ts"
   },
   "engines": {
     "node": ">=20"
