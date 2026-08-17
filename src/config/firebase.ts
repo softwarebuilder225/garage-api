@@ -1,11 +1,29 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
+import { cert, getApps, initializeApp, type App, type ServiceAccount } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { env, isFirebaseConfigured } from './env.js';
 
 let app: App | undefined;
 let db: Firestore | undefined;
+
+function serviceAccountFromEnv(): ServiceAccount | string {
+  if (env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      return JSON.parse(env.FIREBASE_SERVICE_ACCOUNT) as ServiceAccount;
+    } catch {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT is not valid JSON');
+    }
+  }
+
+  const credentialsPath = resolve(env.GOOGLE_APPLICATION_CREDENTIALS as string);
+
+  if (!existsSync(credentialsPath)) {
+    throw new Error(`Service account file not found: ${credentialsPath}`);
+  }
+
+  return credentialsPath;
+}
 
 export function getFirebaseApp(): App {
   if (app) {
@@ -19,21 +37,11 @@ export function getFirebaseApp(): App {
   }
 
   if (!isFirebaseConfigured()) {
-    throw new Error(
-      'Firebase is not configured. Copy .env.example to .env and set FIREBASE_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS.',
-    );
-  }
-
-  const credentialsPath = resolve(env.GOOGLE_APPLICATION_CREDENTIALS as string);
-
-  if (!existsSync(credentialsPath)) {
-    throw new Error(
-      `Firebase service account file not found at "${credentialsPath}". Download it from Firebase → Project settings → Service accounts.`,
-    );
+    throw new Error('Missing Firebase config (project id + credentials)');
   }
 
   app = initializeApp({
-    credential: cert(credentialsPath),
+    credential: cert(serviceAccountFromEnv()),
     projectId: env.FIREBASE_PROJECT_ID,
   });
 

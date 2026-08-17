@@ -10,6 +10,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default('http://localhost:4200'),
   FIREBASE_PROJECT_ID: z.string().min(1).optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().min(1).optional(),
+  FIREBASE_SERVICE_ACCOUNT: z.string().min(1).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -25,6 +26,10 @@ export const env = parsed.data;
 export function isFirebaseConfigured(): boolean {
   if (!env.FIREBASE_PROJECT_ID || env.FIREBASE_PROJECT_ID === 'your-project-id') {
     return false;
+  }
+
+  if (env.FIREBASE_SERVICE_ACCOUNT) {
+    return true;
   }
 
   if (!env.GOOGLE_APPLICATION_CREDENTIALS) {
